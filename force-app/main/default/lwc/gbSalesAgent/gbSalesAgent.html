@@ -1,0 +1,128 @@
+<template>
+  <div class="slds-card gb-agent">
+    <div
+      class="slds-card__header slds-p-horizontal_small slds-p-vertical_x-small"
+    >
+      <h2 class="slds-text-heading_small">Gradient Sales Agent</h2>
+    </div>
+
+    <!-- Transcript -->
+    <div
+      class="gb-transcript"
+      role="log"
+      aria-live="polite"
+      aria-label="Conversation transcript"
+    >
+      <template for:each={messages} for:item="m">
+        <div key={m.id} class={m.cssClass}>{m.text}</div>
+      </template>
+
+      <!-- Missing-field prompts -->
+      <template if:true={hasMissing}>
+        <div
+          class="gb-block gb-missing"
+          role="group"
+          aria-label="Information still needed"
+        >
+          <p class="slds-text-title_caps slds-m-bottom_xx-small">
+            Still needed
+          </p>
+          <ul class="slds-list_dotted">
+            <template for:each={missingFields} for:item="f">
+              <li key={f}>{f}</li>
+            </template>
+          </ul>
+        </div>
+      </template>
+
+      <!-- Confirmation summary card (the confirm gate) -->
+      <template if:true={showSummary}>
+        <div
+          class="gb-block gb-summary"
+          role="group"
+          aria-label="Confirmation summary"
+        >
+          <p class="slds-text-title_caps slds-m-bottom_xx-small">
+            Please confirm
+          </p>
+          <template for:each={summaryItems} for:item="it">
+            <div key={it.id} class="gb-row">
+              <span class="gb-row_label">{it.k}</span>
+              <span class="gb-row_value">{it.v}</span>
+            </div>
+          </template>
+          <div
+            class="slds-grid slds-grid_align-end slds-m-top_x-small gb-actions"
+          >
+            <lightning-button
+              label="Cancel"
+              variant="neutral"
+              onclick={handleCancel}
+              disabled={isBusy}
+              class="slds-m-right_x-small"
+            ></lightning-button>
+            <lightning-button
+              label="Proceed"
+              variant="brand"
+              onclick={handleProceed}
+              disabled={isBusy}
+            ></lightning-button>
+          </div>
+        </div>
+      </template>
+
+      <!-- Result links -->
+      <template if:true={hasLinks}>
+        <div
+          class="gb-block gb-links"
+          role="group"
+          aria-label="Created records"
+        >
+          <p class="slds-text-title_caps slds-m-bottom_xx-small">
+            Created records
+          </p>
+          <ul class="slds-list_dotted">
+            <template for:each={resultLinks} for:item="l">
+              <li key={l.id}>
+                <a href={l.url} target="_blank" rel="noopener noreferrer"
+                  >{l.label}</a
+                >
+              </li>
+            </template>
+          </ul>
+        </div>
+      </template>
+
+      <template if:true={isBusy}>
+        <div class="gb-busy" aria-live="polite">
+          <lightning-spinner
+            alternative-text="Working…"
+            size="small"
+          ></lightning-spinner>
+        </div>
+      </template>
+    </div>
+
+    <!-- Input -->
+    <div class="gb-input slds-p-around_x-small">
+      <lightning-textarea
+        name="prompt"
+        label="Message to the sales agent"
+        variant="label-hidden"
+        placeholder="Describe the loading advice…"
+        value={inputValue}
+        onchange={handleInput}
+        onkeyup={handleKeyup}
+        disabled={inputDisabled}
+      ></lightning-textarea>
+      <div class="slds-grid slds-grid_align-end slds-m-top_xx-small">
+        <lightning-button
+          label="Send"
+          variant="brand"
+          onclick={handleSend}
+          disabled={inputDisabled}
+        ></lightning-button>
+      </div>
+    </div>
+  </div>
+</template>
