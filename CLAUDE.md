@@ -182,6 +182,45 @@ LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTra
   `Agent_DescribeObject`/curated list. Insight handlers are read-only and never mutate
   create-chain state. (Post-submit state already resets to fresh `COLLECTING` — verified, not a bug.)
 
+### Known v1 limitation: intent-in-context follow-ups
+
+- **4th data point for Phase-6 intent-in-context:** replayed from the Account-less utility bar
+  on 2026-06-01. Prompt: `how many orders are on Test Olam account` classifies as
+  `ACCOUNT_INSIGHT`, but `extractInsightAccount()` only recognizes `for <name>` /
+  `related to <name>` phrasing, so it misses `on Test Olam account` and asks the read-only
+  `Which account?`. Because that read-only ask leaves state at `COLLECTING` (no persisted
+  "waiting for an insight account" context), the follow-up `Test Olam` is classified/handled
+  as default `CREATE` and falls into `AWAITING_ACCOUNT`, replying `Which account is this
+Loading Advice for?`. Root pattern matches the earlier `AWAITING_ACCOUNT` loop, intent
+  hijack, and disambiguation switch cases: the reply's meaning depends on what the agent just
+  asked, but v1 does not persist that pending intent. Proposed fix: add an insight-specific
+  awaiting phase/state (for example `AWAITING_INSIGHT_ACCOUNT`, with optional original insight
+  query/metric context), route the next bare account answer back through `Agent_GetAccountInsight`,
+  and widen the account-term extractor to cover `on <name> account` / similar read-only
+  phrasings. Do this in Phase 6, not as a v1 reflex fix.
+- **5th-7th data points: capture-echo replay surfaced the same root pattern on create turns**
+  (rule parser misses natural phrasing / controller does not treat corrections as contextual
+  edits). Replayed 2026-06-01, no build/deploy:
+  - **Echo gap, fix-priority:** after the agent asks for account, `Test o` resolves to
+    `Test Olam` via `Agent_ResolveAccount`'s partial `LIKE '%Test o%'` fallback
+    (`Resolved account "Test Olam" (partial match).`). The next echo showed
+    `Commercial · BITUMEN 60/70 · Qty 50 MT · Price ₦450,000/MT · Location Kano` but did
+    **not** show the resolved account, even though state had `accountId=Test Olam`. This is
+    risky because short fragments can win silently. Small v1-safe proposed fix: prepend the
+    resolved account name in `captureEcho()` (for example `Account Test Olam`) whenever
+    `st.accountId` is set.
+  - **Silent load-type retention:** replayed turn 1 `commercial`, then later
+    `stock transfer, 50 MT to Kaduna`. Quantity changed to `50`, but `typeOfLoad` stayed
+    `Commercial` because `handleCollecting()` only sets load type when `st.typeOfLoad == null`.
+    The echo correctly exposed the retained value (`Commercial`), but the user correction was
+    ignored. Small v1-safe proposed fix: allow explicit later `Commercial`/`Stock Transfer`
+    mentions to overwrite `st.typeOfLoad` (ideally with the echo making the new value visible).
+  - **Parser phrasing gaps to keep for Phase 6, not regex-widen tonight:** `2 weeks from now`
+    did not parse as a date; field-label-shaped answers copied from the missing list
+    (`Order: today`, `Loading Advice Line: Lagos`) did not parse; bare `to Kaduna` did not
+    parse as location (same as earlier `to Warri`); `xx` was correctly rejected as an invalid
+    Customer Type picklist value.
+
 ## Rule-based parser — verified v1 limits (Phase-6 candidates)
 
 Confirmed by replay (a value not echoed earlier made some forms look like they "didn't parse"
