@@ -146,5 +146,14 @@ LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTra
 
 ## Status
 - Step 2 (schema) ✅ · Phase 1 (read-only services) ✅ · Phase 2 (sales chain) ✅ ·
-  Phase 3 (headless auto-approval) ✅ — all deployed to gb-partialsb. Next: Phase 4
-  (parser + stateless conversation controller).
+  Phase 3 (headless auto-approval) ✅ · Phase 4 (NL parser + stateless conversation
+  controller) ✅ — all deployed to gb-partialsb; 58 Agent tests pass, new code ≥90%.
+  Next: Phase 5 (LWC `gbSalesAgent` on utility bar + Account page).
+- **Phase 4 pieces:** `AgentPromptParser` interface + `AgentContext`/`AgentParseResult`;
+  `Agent_Setting__mdt.Default.Active_Parser` + `AgentParserFactory` (LLM-swappable seam,
+  defaults to rule-based); `RuleBasedPromptParser` (qty/price regex, load-type keywords,
+  fuzzy Account/Product, picklist + light date parsing; ambiguous → `unresolved`, never
+  guesses); `AgentConversationController.advance(text, stateJson, pageAccountId)` — stateless
+  turn machine (COLLECTING → AWAITING_CONFIRM → PENDING_SUBMIT). The confirm turn commits
+  (txn 1) and sets `autoContinue`; the LWC calls `advance` again to submit (txn 2) — honoring
+  the separate-transaction PDF constraint.

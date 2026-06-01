@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Active_Parser__c</fullName>
+    <label>Active Parser</label>
+    <description>Apex class name of the active AgentPromptParser implementation. Swap to an LLM parser here with no code change.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>
