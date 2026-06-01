@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Active_Intent_Classifier__c</fullName>
+    <label>Active Intent Classifier</label>
+    <description
+  >Apex class name of the active AgentIntentClassifier implementation. Swap to an LLM classifier here with no code change.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+</CustomField>

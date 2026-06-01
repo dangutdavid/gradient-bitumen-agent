@@ -5,11 +5,13 @@ Project context for the Gradient Bitumen (GB) Salesforce agent. Full schema deta
 relationships, and the phase plan.
 
 ## Org
+
 - Target sandbox alias: **`gb-partialsb`** (`maren@dkloudconsulting.compartialsb`, Org Id `00Dct000004upaDEAQ`).
 - SFDX source format under `force-app/main/default/`. API version **66.0**.
 - Deploy/test: `sf project deploy start -o gb-partialsb`, `sf apex run test -o gb-partialsb`.
 
 ## What we're building
+
 An agent (Agentforce / invocable-Apex actions) that resolves an account, reports account
 insight, describes objects, then creates and submits a **Loading Advice** headlessly —
 mirroring the existing UI screens/flows.
@@ -17,28 +19,34 @@ mirroring the existing UI screens/flows.
 ## Confirmed schema facts (verified from org describe + metadata XML — not memory)
 
 ### Objects in scope
+
 `Account`, `Opportunity`, `Order`, `Loading_Advice__c`, `Loading_Advice_Line__c`.
 
 ### Relationships
+
 - `Opportunity.AccountId` → Account (lookup)
 - `Order.AccountId` → Account (lookup); `Order.OpportunityId` → Opportunity (lookup)
 - `Loading_Advice__c.Order_DKL__c` → Order — **MASTER-DETAIL** (non-reparentable)
-- `Loading_Advice_Line__c.LoadingAdvice_DKL__c` → Loading_Advice__c — **MASTER-DETAIL** (non-reparentable)
+- `Loading_Advice_Line__c.LoadingAdvice_DKL__c` → Loading_Advice\_\_c — **MASTER-DETAIL** (non-reparentable)
 - LA also: `Account_DKL__c` → Account, `Opportunity_DKL__c` → Opportunity (lookups)
-- Create **parent-first**: Order → Loading_Advice__c → Loading_Advice_Line__c.
+- Create **parent-first**: Order → Loading_Advice**c → Loading_Advice_Line**c.
 
 ### Master-detail field API names (must supply at insert)
+
 - `Loading_Advice__c.Order_DKL__c`
 - `Loading_Advice_Line__c.LoadingAdvice_DKL__c`
 
-### Loading_Advice__c record types (Type of Load → DeveloperName)
+### Loading_Advice\_\_c record types (Type of Load → DeveloperName)
+
 - Commercial → `Commercial_DKL`
 - Stock Transfer → `StockTransfer_DKL`
 - `Agent_CommitLoadingAdvice` (Phase 2) sets `RecordTypeId` from this; default `Commercial_DKL`.
 
 ### Curated business-required fields (SOURCE OF TRUTH for `missingFields` — NOT DB nillable)
+
 All on `Loading_Advice_Line__c`:
-1. `Customer_DKL__c` (→ Account)  — *only this + master-detail are DB `nillable=false`*
+
+1. `Customer_DKL__c` (→ Account) — _only this + master-detail are DB `nillable=false`_
 2. `CustomerType_DKL__c` (picklist: Advance; Credit)
 3. `Location_DKL__c` (text)
 4. `Product_DKL__c` (→ Product2)
@@ -48,11 +56,13 @@ All on `Loading_Advice_Line__c`:
 The agent validates against this list, **not** the schema nillable flags.
 
 ### Order — truly mandatory at create
+
 - `EffectiveDate` (Order Start Date), `Status` (Draft|Activated|Hold|Fulfilled/Closed|Cancelled).
 - `AccountId`: describe says nillable=true but platform enforces it at insert → **treat as mandatory**.
 - Auto-defaulted (don't supply): `OwnerId`, `CurrencyIsoCode` (NGN default), `IsReductionOrder`.
 
 ### PDF generation (Commercial vs Stock Transfer)
+
 - Commercial (`Commercial_DKL`) → `LoadingAdvicePDFGenerator` (VF `LoadingAdvicePDFTemplate`)
 - Stock Transfer (`StockTransfer_DKL`) → `GenerateStockTransferPDF` (VF `StockTransferDispatchPDF`)
 - `LoadingAdvicePDFExtension` = shared VF controller (defaults to Commercial if RecordType null).
@@ -60,6 +70,7 @@ The agent validates against this list, **not** the schema nillable flags.
   firing at **approval/dispatch**, NOT at submit.
 
 ### Submit-for-Approval (flow `Loading Advice - Submit for Approval`, screen flow)
+
 Sets on the LA header: `Approval_Status_DKL__c='Pending 1st Approver'`, `Status_DKL__c='Draft'`,
 `SubmittedOn_DKL__c=now`, `Submittedby_DKL__c=running user`. Generates internal PDF via
 `LoadingAdvicePDFGenerator`, builds attachments via subflow `LA_Build_Email_Attachments`,
@@ -68,7 +79,9 @@ Approver routing via custom object `Approvver_Availability__c` (note spelling) f
 `ApprovalStage_DKL__c='Level 1'` → `Approver_DKL__c` / `BackupApprover_DKL__c`.
 
 ## Confirmed agent contract (single-prompt, ask-then-confirm)
+
 The user sends ONE natural-language prompt containing the values. The agent then:
+
 1. Parses it and resolves the Account (recordId on the Account page; else ask for the name
    from the utility bar; if ambiguous, ask which one).
 2. If any REQUIRED field is missing, asks for ALL gaps in ONE follow-up (not one at a time).
@@ -81,11 +94,13 @@ The user sends ONE natural-language prompt containing the values. The agent then
 LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTransfer_DKL`).
 
 ### AgentActionResult (shared wrapper) shape
+
 `success` (Boolean), `status` (`OK`|`NEEDS_INPUT`|`NEEDS_CONFIRM`|`ERROR`), `recordId`,
 `recordUrl`, `missingFields` (List<String>), `summaryJson`, `message`. Factory helpers:
 `ok()`, `needsInput()`, `needsConfirm()`, `error()`, plus `withRecord(Id)` for recordId/URL.
 
 ## Phase plan
+
 - **Phase 1 (current):** read-only agent actions + shared wrapper.
   - `AgentActionResult` — shared result wrapper (success flag, message, data, errors).
   - `Agent_ResolveAccount` — resolve an Account by name/identifier.
@@ -107,7 +122,7 @@ LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTra
     `Database.setSavepoint()` + rollback on ANY failure (no orphaned records), threading each
     parent Id into the next child. Sets `RecordTypeId` on the LA from the Type of Load in the
     same step. On success calls `Agent_SubmitLAForApproval` and returns the four record links
-    + submit status. On failure: roll back everything, create nothing, return the error.
+    - submit status. On failure: roll back everything, create nothing, return the error.
   - Tests cover: full happy path (4 created + submitted), missing-field-in-prompt branch
     (consolidated ask, nothing created), commit-without-confirmation rejection, and a
     mid-chain insert failure that rolls the whole chain back cleanly.
@@ -129,22 +144,69 @@ LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTra
 - **(superseded) earlier Phase 3 note:** mirror the Submit-for-Approval screen flow ONLY
   (internal PDF via `LoadingAdvicePDFGenerator` + `LA_Build_Email_Attachments` subflow +
   notification + email + `Status_DKL__c='Draft'`/`Approval_Status_DKL__c='Pending 1st Approver'`
-  + `SubmittedOn_DKL__c`/`Submittedby_DKL__c`). Invoked by `Agent_CommitSalesChain` on success.
-  NOT the approval-time Commercial/Stock-Transfer dispatch routing (that lives in
-  `LA_Approve_Reject` and fires later at approval off `RecordType`).
+  - `SubmittedOn_DKL__c`/`Submittedby_DKL__c`). Invoked by `Agent_CommitSalesChain` on success.
+    NOT the approval-time Commercial/Stock-Transfer dispatch routing (that lives in
+    `LA_Approve_Reject` and fires later at approval off `RecordType`).
 
 ## Conventions
+
 - Apex actions exposed via `@InvocableMethod` where they are agent-callable.
 - Keep each action's logic in its own class with a matching `*Test` class.
 - Use `AgentActionResult` as the uniform return shape across actions.
 
+## Security posture & sharing (deliberate, v1)
+
+- **FLS = option (a), permissive insert (DELIBERATE).** `AgentChainService.commitChain` uses
+  plain Apex `insert` (no `Security.stripInaccessible`). The agent is a **trusted, gated
+  action**; the protections are **panel visibility** (who can see/run `gbSalesAgent`) + the
+  **confirm gate**, NOT per-field FLS. Consequence: a user can create a chain even if their
+  profile lacks FLS on some Line fields (e.g. `Customer_DKL__c`/`CustomerType`/`Quantity` are
+  missing for the **Gradient Sales Team** profile and the **Loading Advice - Sales User**
+  permset). Option (b) `stripInaccessible` is **deferred to a security review** because a
+  stripped _required_ field would read back as "missing" and break the ask-loop — and (b)
+  would require fixing the Sales-User permset FLS at the same time.
+- **`Agent_ResolveAccount` runs `with sharing`**, and **Account OWD = Private**. So a sales rep
+  only resolves accounts **shared to them**; for a non-admin UAT pass, test with an account the
+  rep **owns**. (Not a code change — handover note.)
+- Object/field access for non-admin sales users comes via the **Loading Advice - Sales User**
+  permission set (grants LA/Line/Opp/Order CRUD; assign it before any non-admin pass).
+
+## Intent routing (Phase 5.1)
+
+- `AgentIntentRouter.classify(text)` runs at the **top of `advance()`, idle-only
+  (`phase==COLLECTING`), BEFORE the create parser**, so read-only questions ("list orders for
+  X", "what does a loading advice need") are never hijacked by the parser's `for <name>`
+  extractor. Pluggable seam: `AgentIntentClassifier` interface + `RuleBasedIntentClassifier`,
+  selected via `Agent_Setting__mdt.Default.Active_Intent_Classifier` (LLM-swappable, mirrors
+  the parser seam). `ACCOUNT_INSIGHT` → `Agent_GetAccountInsight`; `OBJECT_INFO` →
+  `Agent_DescribeObject`/curated list. Insight handlers are read-only and never mutate
+  create-chain state. (Post-submit state already resets to fresh `COLLECTING` — verified, not a bug.)
+
+## Rule-based parser — verified v1 limits (Phase-6 candidates)
+
+Confirmed by replay (a value not echoed earlier made some forms look like they "didn't parse"
+— corrected here):
+
+- **Price** accepted forms: `NGN…`/`N…`/`₦…`-prefixed, `price <n>`, `at <n>`, `@ <n>`, optional
+  `/MT`; value must be **≥1000**. NOT accepted: bare number (`450000`, `450,000`), `…k`
+  shorthand (`470k`). Widening these → Phase 6 (regex-widening now risks false matches).
+- **Quantity**: both `30 MT` and `30MT` parse (space optional); decimals ok (`1.5 MT`).
+- **Location**: needs a cue (`deliver to` / `delivery to` / `location:`); bare `to X` is
+  ignored; a second place after a valid one (`deliver to Kano via Lago`) is correctly ignored.
+- **Transparency (fixed):** parsed values were merged silently → silent-overwrite (last value
+  wins) and silent-retention (a non-parsing correction keeps the prior value). Fixed by the
+  **capture-echo** (controller prepends "Got it so far: …" to every "still needed" prompt so
+  each parse is visible). Richer NL formats remain a Phase-6 (LLM parser) item.
+
 ## TODO / known debt
+
 - **Legacy PDF classes are at 0% coverage** (`LoadingAdvicePDFGenerator`,
   `LoadingAdvicePDFExtension`, `GenerateStockTransferPDF`). They MUST get test classes before
   any validated/production deploy (org-wide 75% gate). Until then, deploy to the sandbox with
   `--test-level NoTestRun` and run the new test classes separately with `sf apex run test`.
 
 ## Status
+
 - Step 2 (schema) ✅ · Phase 1 (read-only services) ✅ · Phase 2 (sales chain) ✅ ·
   Phase 3 (headless auto-approval) ✅ · Phase 4 (NL parser + stateless conversation
   controller) ✅ — all deployed to gb-partialsb; 58 Agent tests pass, new code ≥90%.
