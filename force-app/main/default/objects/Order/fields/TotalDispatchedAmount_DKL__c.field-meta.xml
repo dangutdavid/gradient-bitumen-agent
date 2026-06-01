@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TotalDispatchedAmount_DKL__c</fullName>
+    <label>Total Dispatched Amount</label>
+    <summarizedField>Loading_Advice__c.RollUpAmount_DKL__c</summarizedField>
+    <summaryFilterItems>
+        <field>Loading_Advice__c.LogisticsEmailSent_DKL__c</field>
+        <operation>equals</operation>
+        <value>True</value>
+    </summaryFilterItems>
+    <summaryFilterItems>
+        <field>Loading_Advice__c.Approval_Status_DKL__c</field>
+        <operation>notEqual</operation>
+        <value>Rejected</value>
+    </summaryFilterItems>
+    <summaryFilterItems>
+        <field>Loading_Advice__c.Status_DKL__c</field>
+        <operation>notEqual</operation>
+        <value>Diverted</value>
+    </summaryFilterItems>
+    <summaryFilterItems>
+        <field>Loading_Advice__c.Status_DKL__c</field>
+        <operation>notEqual</operation>
+        <value>Cancelled</value>
+    </summaryFilterItems>
+    <summaryForeignKey>Loading_Advice__c.Order_DKL__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <type>Summary</type>
+</CustomField>

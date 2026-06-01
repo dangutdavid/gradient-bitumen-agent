@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LoadingAdvicePendingApproval_DKL</fullName>
+    <columns>NAME</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>Approval_Status_DKL__c</field>
+        <operation>equals</operation>
+        <value>Pending 1st Approver,Pending 2nd Approver,Pending 3rd Approver</value>
+    </filters>
+    <label>Loading Advice Pending Approval</label>
+</ListView>

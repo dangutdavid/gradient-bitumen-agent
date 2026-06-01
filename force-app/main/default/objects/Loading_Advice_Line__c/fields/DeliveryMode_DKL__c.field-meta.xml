@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DeliveryMode_DKL__c</fullName>
+    <label>Delivery Mode</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Gradient Delivery</fullName>
+                <default>false</default>
+                <label>Gradient Delivery</label>
+            </value>
+            <value>
+                <fullName>Self Collection</fullName>
+                <default>false</default>
+                <label>Self Collection</label>
+            </value>
+            <value>
+                <fullName>3rd Party Transport</fullName>
+                <default>false</default>
+                <label>3rd Party Transport</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

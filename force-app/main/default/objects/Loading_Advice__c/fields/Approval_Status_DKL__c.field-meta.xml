@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approval_Status_DKL__c</fullName>
+    <label>Approval Status</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Draft</fullName>
+                <default>false</default>
+                <label>Draft</label>
+            </value>
+            <value>
+                <fullName>Approved</fullName>
+                <default>false</default>
+                <label>Approved</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>Rejected</label>
+            </value>
+            <value>
+                <fullName>Not Submitted</fullName>
+                <default>false</default>
+                <label>Not Submitted</label>
+            </value>
+            <value>
+                <fullName>Pending 1st Approver</fullName>
+                <default>false</default>
+                <label>Pending 1st Approver</label>
+            </value>
+            <value>
+                <fullName>Pending 2nd Approver</fullName>
+                <default>false</default>
+                <label>Pending 2nd Approver</label>
+            </value>
+            <value>
+                <fullName>Pending 3rd Approver</fullName>
+                <default>false</default>
+                <label>Pending 3rd Approver</label>
+            </value>
+            <value>
+                <fullName>Pending</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Pending</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

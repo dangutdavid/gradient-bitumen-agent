@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RejectedLoadingAdvices_DKL</fullName>
+    <columns>NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Approval_Status_DKL__c</field>
+        <operation>equals</operation>
+        <value>Rejected</value>
+    </filters>
+    <label>Rejected Loading Advices</label>
+</ListView>

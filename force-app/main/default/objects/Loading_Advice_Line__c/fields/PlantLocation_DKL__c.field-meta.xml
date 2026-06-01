@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PlantLocation_DKL__c</fullName>
+    <label>Plant Location</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Kaduna</fullName>
+                <default>false</default>
+                <label>Kaduna</label>
+            </value>
+            <value>
+                <fullName>Warri</fullName>
+                <default>false</default>
+                <label>Warri</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pending2ndApprover_DKL</fullName>
+    <columns>NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Approval_Status_DKL__c</field>
+        <operation>equals</operation>
+        <value>Pending 2nd Approver</value>
+    </filters>
+    <label>Pending 2nd Approver</label>
+</ListView>

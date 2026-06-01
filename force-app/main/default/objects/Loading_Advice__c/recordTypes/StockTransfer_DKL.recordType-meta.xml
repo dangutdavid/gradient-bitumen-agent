@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>StockTransfer_DKL</fullName>
+    <active>true</active>
+    <description>Used for internal movement of stock between locations without pricing or revenue impact.</description>
+    <label>Stock Transfer</label>
+    <picklistValues>
+        <picklist>Approval_Status_DKL__c</picklist>
+        <values>
+            <fullName>Approved</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Draft</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Not Submitted</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Pending 1st Approver</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Pending 2nd Approver</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Pending 3rd Approver</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Rejected</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>ProductFamily_DKL__c</picklist>
+        <values>
+            <fullName>Bitumen 60%2F70</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Bituminous Emulsion</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Status_DKL__c</picklist>
+        <values>
+            <fullName>Active</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Cancelled</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Diverted</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Draft</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Superseded</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

@@ -4,5 +4,20 @@
     "**/bower_components": true,
     "**/.sf": true,
     "**/.sfdx": true
-  }
+  },
+  "[apex]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "Prettier.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "Prettier.prettier-vscode"
+  },
+  "xml.preferences.showSchemaDocumentationType": "none"
 }

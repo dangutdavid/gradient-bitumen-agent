@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ApprovedLoadingAdvices_DKL</fullName>
+    <columns>NAME</columns>
+    <columns>Account_DKL__c</columns>
+    <columns>Approval_Status_DKL__c</columns>
+    <columns>CREATEDBY_USER</columns>
+    <columns>CREATED_DATE</columns>
+    <columns>LogisticsEmailSent_DKL__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Approval_Status_DKL__c</field>
+        <operation>equals</operation>
+        <value>Approved</value>
+    </filters>
+    <label>Approved Loading Advice</label>
+</ListView>

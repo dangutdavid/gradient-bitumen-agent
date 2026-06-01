@@ -46,3 +46,8 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# CLI stderr capture (noise) and internal build prompts (not for the client repo)
+*.err
+Claude_Code_Prompt.txt
+Claude_Code_Phase2_Prompt*.txt

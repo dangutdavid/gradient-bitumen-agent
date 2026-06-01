@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SignedActualAmount_DKL__c</fullName>
+    <formula>IF(
+    AND(
+        ISPICKVAL(LoadingAdvice_DKL__r.Status_DKL__c, &quot;Active&quot;),
+        ISPICKVAL(LoadingAdvice_DKL__r.Approval_Status_DKL__c, &quot;Approved&quot;)
+    ),
+    GrandTotal_DKL__c,
+    0
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Signed Actual Amount</label>
+    <precision>18</precision>
+    <required>false</required>
+    <scale>2</scale>
+    <trackTrending>false</trackTrending>
+    <type>Currency</type>
+</CustomField>

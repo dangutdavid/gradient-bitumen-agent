@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>GradientOrderCompactLayout_DKL</fullName>
+    <fields>AccountId</fields>
+    <fields>OrderQuantity_DKL__c</fields>
+    <fields>RemainingQuantity_DKL__c</fields>
+    <fields>TotalQuantityDispatched_DKL__c</fields>
+    <fields>TotalDispatchedAmount_DKL__c</fields>
+    <label>Gradient Order Compact Layout</label>
+</CompactLayout>
