@@ -1,0 +1,112 @@
+/**
+ * ============================================================================
+ * PHASE 6 DESIGN SKELETON — NOT DEPLOYED, NOT WIRED, DOES NOT CALL ANY LLM.
+ * ============================================================================
+ * Saved as .cls.txt OUTSIDE force-app/ on purpose so it cannot be deployed by
+ * `sf project deploy`. It is a reviewable shape only. Building Phase 6 = move this
+ * into force-app/main/default/classes/LLMPromptParser.cls, implement the one TODO
+ * callout, add the metadata in Phase6_Build_Plan.md, then flip
+ * Agent_Setting__mdt.Default.Active_Parser to 'LLMPromptParser'.
+ *
+ * GATE: do not build until DKloud approves per-turn egress of account/price/volume
+ * data to the chosen provider (see Phase6_Build_Plan.md §Privacy). v1 stays banked.
+ *
+ * CONTRACT (unchanged): this returns the SAME AgentParseResult shape that
+ * RuleBasedPromptParser returns — fieldMap (sObject API names), typeOfLoad,
+ * accountHint, unresolved[]. Because the output contract is identical, the
+ * conversation controller, the LWC, every action service, and all existing tests
+ * are UNCHANGED. Only this Layer-3 class is added.
+ */
+public with sharing class LLMPromptParser implements AgentPromptParser {
+
+    public AgentParseResult parse(String text, AgentContext ctx) {
+        // PER-TURN fallback lives INSIDE this class: it handles "the model call failed
+        // right now" (callout error, timeout, unusable/empty response) by degrading to
+        // the proven rule-based parser for THIS turn. This is distinct from
+        // AgentParserFactory's class-missing fallback, which handles "the configured
+        // parser class doesn't exist" (misconfiguration). Both safety nets matter.
+        try {
+            Agent_Setting__mdt cfg = Agent_Setting__mdt.getInstance('Default');
+            String provider = cfg != null ? cfg.LLM_Provider__c : 'SalesforceModels'; // Anthropic|OpenAI|SalesforceModels
+            Integer timeoutMs = (cfg != null && cfg.LLM_Timeout_Ms__c != null)
+                ? Integer.valueOf(cfg.LLM_Timeout_Ms__c) : 10000;
+
+            String prompt = buildPrompt(text, ctx);
+            String rawJson = callModel(provider, prompt, timeoutMs);
+
+            if (String.isBlank(rawJson)) {
+                return fallback(text, ctx); // unusable/empty -> rule-based this turn
+            }
+            AgentParseResult res = mapToParseResult(rawJson, ctx);
+            return res != null ? res : fallback(text, ctx);
+        } catch (Exception e) {
+            // CalloutException, timeout, JSON/shape error, anything -> never break a turn.
+            return fallback(text, ctx);
+        }
+    }
+
+    private AgentParseResult fallback(String text, AgentContext ctx) {
+        return new RuleBasedPromptParser().parse(text, ctx);
+    }
+
+    /**
+     * Build the model instruction. MUST tell the model to return ONLY JSON in exactly the
+     * AgentParseResult shape so mapToParseResult can deserialize it 1:1:
+     *   {
+     *     "fieldMap":   { "<sObject API name>": <value>, ... },  // e.g. QuantityMT_DKL__c, PricePerMT_DKL__c,
+     *                                                            //      Product_DKL__c (Id), Location_DKL__c,
+     *                                                            //      CustomerType_DKL__c, CloseDate, EffectiveDate
+     *     "typeOfLoad": "Commercial" | "Stock Transfer" | null,
+     *     "accountHint": "<account name lifted from text>" | null,
+     *     "unresolved": ["<thing it could not confidently extract>", ...]
+     *   }
+     * The prompt should also pass the object/field schema + valid picklist values + the
+     * Account/Product2 name lists as context so the model emits real API names/Ids, and
+     * instruct it to put anything ambiguous in `unresolved` rather than guessing — same
+     * "never guess" rule the rule-based parser follows.
+     */
+    private String buildPrompt(String text, AgentContext ctx) {
+        // TODO(phase6): assemble system+user prompt; include schema/picklists/name lists as context.
+        // Account-page context (ctx.accountId) should be passed so the model can resolve "this account".
+        return text; // placeholder — real prompt assembly happens at build time
+    }
+
+    /**
+     * Provider-agnostic callout via a per-provider Named Credential. One metadata value
+     * (LLM_Provider) selects the endpoint, so swapping Anthropic/OpenAI/Salesforce Models
+     * is configuration, not code.
+     *
+     * Named Credentials (created at build time, see Phase6_Build_Plan.md §Metadata):
+     *   - Anthropic        -> callout:Anthropic_LLM
+     *   - OpenAI           -> callout:OpenAI_LLM
+     *   - SalesforceModels -> callout:Salesforce_Models_API   (recommended — in-trust-boundary)
+     */
+    private String callModel(String provider, String prompt, Integer timeoutMs) {
+        // ====================================================================
+        // TODO(phase6): THE LIVE CALL GOES HERE. Intentionally NOT implemented.
+        //   HttpRequest req = new HttpRequest();
+        //   req.setEndpoint('callout:' + namedCredentialFor(provider));
+        //   req.setMethod('POST');
+        //   req.setTimeout(timeoutMs);
+        //   req.setHeader('Content-Type', 'application/json');
+        //   req.setBody(providerEnvelope(provider, prompt));   // provider-specific request body
+        //   HttpResponse resp = new Http().send(req);
+        //   return resp.getStatusCode() == 200 ? extractJson(provider, resp.getBody()) : null;
+        // No callout is made in this skeleton.
+        // ====================================================================
+        throw new LLMNotImplementedException('Phase 6 skeleton — callModel not implemented (egress gate).');
+    }
+
+    /** Deserialize the model's JSON into AgentParseResult (untyped, mirroring the controller's pattern). */
+    private AgentParseResult mapToParseResult(String rawJson, AgentContext ctx) {
+        // TODO(phase6): JSON.deserializeUntyped(rawJson) -> populate AgentParseResult
+        //   - fieldMap   : (Map<String,Object>) m.get('fieldMap')   // coerced to field types at commit (existing applyFields)
+        //   - typeOfLoad : (String) m.get('typeOfLoad')
+        //   - accountHint: (String) m.get('accountHint')
+        //   - unresolved : List<String> from m.get('unresolved')
+        //   Validate keys against Schema describe; drop unknown fields; if shape is wrong -> return null (caller falls back).
+        return null; // placeholder
+    }
+
+    public class LLMNotImplementedException extends Exception {}
+}
