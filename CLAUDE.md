@@ -42,6 +42,16 @@ mirroring the existing UI screens/flows.
 - Stock Transfer → `StockTransfer_DKL`
 - `Agent_CommitLoadingAdvice` (Phase 2) sets `RecordTypeId` from this; default `Commercial_DKL`.
 
+### Opportunity record type (confirmed by Aramy 2026-06-02)
+
+- Agent-created Opportunities are set to **`GradientOpportunity_DKL`** ("Gradient Opportunity")
+  in `AgentChainService.commitChain` (resolved by DeveloperName, cached). NOT the legacy
+  `Gradient_Opportunity` ("…Old"). Before this fix the Opp inherited the profile default and
+  was mis-typed `Greenville_Industrial`. Creators are admins (target-user=no), who have the RT.
+- **Account record type:** OPEN — Aramy to confirm whether the agent should constrain
+  resolution to `Gradient_Account` (filter `Agent_ResolveAccount`) or it's org context only.
+  No code change until answered. `Agent_ResolveAccount` untouched.
+
 ### Curated business-required fields (SOURCE OF TRUTH for `missingFields` — NOT DB nillable)
 
 All on `Loading_Advice_Line__c`:
