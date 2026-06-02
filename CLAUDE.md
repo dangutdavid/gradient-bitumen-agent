@@ -269,6 +269,14 @@ Confirmed by replay (a value not echoed earlier made some forms look like they "
   LA 0456 = `Credit`), but `LoadingAdvicePDFTemplate` (VF) has no column for it. If the client
   wants it on the printed LA, that's a one-column VF template change — separate from the agent,
   which sets the field correctly. Client's call; do not build unless asked.
+- **Optional follow-up — header `ProductFamily_DKL__c` blank (client design call, do not build):**
+  the agent leaves the LA header `ProductFamily_DKL__c` blank (value is on the Line via
+  `Product2.Family`, and the PDF derives it from the Line — verified LA 0456: header null, line
+  "Bitumen 60/70"). It's an editable picklist (no formula/rollup), so it only fills if written.
+  Populate the header ONLY if the client reports/filters Loading Advices by Product Family on
+  the header object — then either the agent sets `laFields.ProductFamily_DKL__c` from the
+  product's family at commit, or a client flow mirrors it from the line. If family is only ever
+  needed via Line/PDF, blank is fine.
 
 ## Status
 
