@@ -259,10 +259,16 @@ Confirmed by replay (a value not echoed earlier made some forms look like they "
 
 ## TODO / known debt
 
-- **Legacy PDF classes are at 0% coverage** (`LoadingAdvicePDFGenerator`,
-  `LoadingAdvicePDFExtension`, `GenerateStockTransferPDF`). They MUST get test classes before
-  any validated/production deploy (org-wide 75% gate). Until then, deploy to the sandbox with
-  `--test-level NoTestRun` and run the new test classes separately with `sf apex run test`.
+- **Legacy PDF classes now have tests** (commit `8cf1f92`): `LoadingAdvicePDFGenerator` 97%,
+  `GenerateStockTransferPDF` 97%, `LoadingAdvicePDFExtension` 94%; org-wide 75%→79%, every class
+  ≥75% so a validated/production deploy is no longer blocked by them. Sandbox deploys still use
+  `--test-level NoTestRun` by **deliberate** choice; switching to `RunLocalTests`/`RunSpecifiedTests`
+  is now possible (a conscious decision, not automatic).
+- **Optional follow-up — Customer Type not on the LA PDF (template-only, NOT agent/code):**
+  the agent captures + stores Customer Type on the Line (`CustomerType_DKL__c`, verified e.g.
+  LA 0456 = `Credit`), but `LoadingAdvicePDFTemplate` (VF) has no column for it. If the client
+  wants it on the printed LA, that's a one-column VF template change — separate from the agent,
+  which sets the field correctly. Client's call; do not build unless asked.
 
 ## Status
 
