@@ -2,7 +2,10 @@
 private class AgentConversationControllerTest {
   @TestSetup
   static void setup() {
-    insert new Account(Name = 'Ledya Foundry Ltd');
+    insert new Account(
+      Name = 'Ledya Foundry Ltd',
+      RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+    );
     insert new Product2(
       Name = 'Bitumen 60/70',
       Family = 'Bitumen 60/70',
@@ -183,7 +186,10 @@ private class AgentConversationControllerTest {
 
   @isTest
   static void answerAccountWithLabelPrefix() {
-    insert new Account(Name = 'Olam for Construction'); // name itself contains "for"
+    insert new Account(
+      Name = 'Olam for Construction',
+      RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+    ); // name itself contains "for"
     AgentConversationController.TurnResult t1 = turn(
       'commercial, 20 MT of Bitumen 60/70 at NGN 450,000/MT, deliver to Lagos',
       null
@@ -205,8 +211,14 @@ private class AgentConversationControllerTest {
   @isTest
   static void ambiguousThenSpecificName() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(
       'commercial loading advice for Bigco Construction — 10 MT of Bitumen 60/70 at NGN 450,000/MT, deliver to Kano',
@@ -388,9 +400,18 @@ private class AgentConversationControllerTest {
   @isTest
   static void disambiguationSwitchConfirmYes() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two'),
-      new Account(Name = 'Test Olam')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Test Olam',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     System.assertEquals('NEEDS_INPUT', t1.status);
@@ -433,9 +454,18 @@ private class AgentConversationControllerTest {
   @isTest
   static void disambiguationSwitchConfirmNoRelists() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two'),
-      new Account(Name = 'Test Olam')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Test Olam',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     AgentConversationController.TurnResult t2 = turn('Test Olam', t1.stateJson);
@@ -458,8 +488,14 @@ private class AgentConversationControllerTest {
   @isTest
   static void disambiguationExactCandidateProceeds() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     AgentConversationController.TurnResult t2 = turn(
@@ -476,8 +512,14 @@ private class AgentConversationControllerTest {
   @isTest
   static void disambiguationNarrowDownOnMultiMatch() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     // "Bigco Construction" matches BOTH candidates -> narrow down.
@@ -492,8 +534,14 @@ private class AgentConversationControllerTest {
   @isTest
   static void disambiguationNonCandidateNoMatchRelists() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     // A non-candidate that resolves to nothing -> re-list the original candidates.
@@ -511,9 +559,18 @@ private class AgentConversationControllerTest {
   @isTest
   static void switchConfirmUnclearReasks() {
     insert new List<Account>{
-      new Account(Name = 'Bigco Construction One'),
-      new Account(Name = 'Bigco Construction Two'),
-      new Account(Name = 'Test Olam')
+      new Account(
+        Name = 'Bigco Construction One',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Bigco Construction Two',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      ),
+      new Account(
+        Name = 'Test Olam',
+        RecordTypeId = AgentChainTestFactory.gradientAccountRtId()
+      )
     };
     AgentConversationController.TurnResult t1 = turn(AMBIG_DEAL, null);
     AgentConversationController.TurnResult t2 = turn('Test Olam', t1.stateJson);
