@@ -48,9 +48,21 @@ mirroring the existing UI screens/flows.
   in `AgentChainService.commitChain` (resolved by DeveloperName, cached). NOT the legacy
   `Gradient_Opportunity` ("…Old"). Before this fix the Opp inherited the profile default and
   was mis-typed `Greenville_Industrial`. Creators are admins (target-user=no), who have the RT.
-- **Account record type:** OPEN — Aramy to confirm whether the agent should constrain
-  resolution to `Gradient_Account` (filter `Agent_ResolveAccount`) or it's org context only.
-  No code change until answered. `Agent_ResolveAccount` untouched.
+- **Account record type:** **OPEN — blocked on a scope-vs-data decision (do NOT build the filter).**
+  Aramy said "only work with Gradient Accounts" (= constrain resolution), but the org reality
+  is a **MIX**, so a `Gradient_Account` filter would silently make most accounts "not found":
+  - Active Account distribution (289): **36% `Gradient_Account` (105)** vs **64% Greenville**
+    (`GreenVilleIndustrialAccount` 108 + `GreenVilleRetailAccount` 76 = 184).
+  - 4 of the 6 demo/UAT accounts are NOT Gradient: **Test Olam, Mafa Rice, Ledya = GreenVilleIndustrial;
+    A A Fugu = GreenVilleRetail** (only ADMAK + SCC are `Gradient_Account`).
+  - Resolution pending Aramy: **(1)** Gradient-only by design → build the filter + test + re-checkpoint
+    (and confirm he accepts the agent declining ~64% of accounts); **(2)** accounts mis-typed →
+    **client-side data cleanup (re-type ~184 accounts), NOT our code**; filter waits until then.
+  - Until then `Agent_ResolveAccount` is **untouched**. The Opp RT fix (`60062bf`) is unaffected.
+- ⚠️ **Handover meta-note:** this is the **2nd** time a "use Gradient X" requirement collided with
+  org record-type reality (1st was the Opportunity RT — was defaulting to `Greenville_Industrial`).
+  In this org, **any "Gradient-only" requirement must be checked against the record-type
+  distribution before implementation** — the labels don't match the data by default.
 
 ### Curated business-required fields (SOURCE OF TRUTH for `missingFields` — NOT DB nillable)
 
