@@ -367,29 +367,33 @@ private class AgentConversationControllerTest {
 
   @isTest
   static void insightWithoutAccountAsksReadOnly() {
-    // ACCOUNT_INSIGHT with no account context and no name -> read-only ask, NOT the
-    // create AWAITING_ACCOUNT loop.
+    // ACCOUNT_INSIGHT with no account context and no name -> asks for the account and waits
+    // in the INSIGHT-account state (NOT the create AWAITING_ACCOUNT flow).
     AgentConversationController.TurnResult t = turn('list all orders', null);
-    System.assertEquals('OK', t.status);
+    System.assertEquals('NEEDS_INPUT', t.status);
     System.assert(t.message.contains('account'), t.message);
     System.assert(
-      !t.missingFields.contains('Account'),
-      'read-only, not the create account ask'
+      t.stateJson.contains('AWAITING_INSIGHT_ACCOUNT'),
+      'insight-account wait, not the create account ask: ' + t.stateJson
     );
-    System.assert(t.stateJson.contains('"phase":"COLLECTING"'), 'stays idle');
   }
 
   @isTest
   static void insightAccountNotFound() {
+    // A named-but-unresolvable insight account re-asks (and waits) rather than dead-ending.
     AgentConversationController.TurnResult t = turn(
       'list orders for Zzz Nonexistent Co',
       null
     );
-    System.assertEquals('OK', t.status);
+    System.assertEquals('NEEDS_INPUT', t.status);
     System.assert(
       t.message.contains('couldn\'t find') ||
       t.message.contains('Zzz Nonexistent Co'),
-      'read-only no-match message: ' + t.message
+      'no-match message: ' + t.message
+    );
+    System.assert(
+      t.stateJson.contains('AWAITING_INSIGHT_ACCOUNT'),
+      'waits for a valid insight account'
     );
   }
 
@@ -626,6 +630,88 @@ private class AgentConversationControllerTest {
     System.assert(
       t3.message.contains('₦460,000'),
       'overwrite visible: ' + t3.message
+    );
+  }
+
+  // ---- AWAITING_INSIGHT_ACCOUNT (utility-bar insight follow-up) ----
+
+  @isTest
+  static void insightWhileIdleAcceptsBareNameFollowup() {
+    // Utility bar (no page account). Insight question with no extractable account name.
+    AgentConversationController.TurnResult t1 = turn(
+      'how many orders on this account',
+      null
+    );
+    System.assertEquals('NEEDS_INPUT', t1.status, t1.message);
+    System.assert(
+      t1.stateJson.contains('AWAITING_INSIGHT_ACCOUNT'),
+      'should wait for an insight account, not the create flow: ' + t1.stateJson
+    );
+
+    // Bare-name follow-up must resolve as the insight account (NOT fall into create).
+    AgentConversationController.TurnResult t2 = turn(
+      'Ledya Foundry Ltd',
+      t1.stateJson
+    );
+    System.assertEquals('OK', t2.status, t2.message);
+    System.assert(
+      t2.message.contains('Orders'),
+      'returns read-only insight: ' + t2.message
+    );
+    System.assert(
+      !t2.message.contains('Loading Advice for'),
+      'must NOT be the create account ask'
+    );
+    Account a = [
+      SELECT Id
+      FROM Account
+      WHERE Name = 'Ledya Foundry Ltd'
+      LIMIT 1
+    ];
+    System.assertEquals(
+      0,
+      [SELECT COUNT() FROM Loading_Advice__c WHERE Account_DKL__c = :a.Id]
+    );
+    System.assert(
+      t2.stateJson.contains('"phase":"COLLECTING"'),
+      'returns to idle'
+    );
+  }
+
+  @isTest
+  static void insightOnAccountPhrasingExtractsName() {
+    // "on <name> account" now extracts the account inline (no follow-up needed).
+    AgentConversationController.TurnResult t = turn(
+      'how many orders on Ledya Foundry Ltd account',
+      null
+    );
+    System.assertEquals('OK', t.status, t.message);
+    System.assert(t.message.contains('Orders'), 'inline insight: ' + t.message);
+    System.assert(
+      !t.missingFields.contains('Account'),
+      'name was extracted, not asked'
+    );
+  }
+
+  @isTest
+  static void insightFollowupNotFoundReasks() {
+    AgentConversationController.TurnResult t1 = turn(
+      'how many orders on this account',
+      null
+    );
+    System.assert(t1.stateJson.contains('AWAITING_INSIGHT_ACCOUNT'));
+    AgentConversationController.TurnResult t2 = turn(
+      'Zzz Nonexistent Co',
+      t1.stateJson
+    );
+    System.assertEquals(
+      'NEEDS_INPUT',
+      t2.status,
+      'still needs a resolvable account'
+    );
+    System.assert(
+      t2.stateJson.contains('AWAITING_INSIGHT_ACCOUNT'),
+      'stays in insight-account wait'
     );
   }
 

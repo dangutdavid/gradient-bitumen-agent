@@ -204,20 +204,17 @@ LA `RecordTypeId` (Commercial → `Commercial_DKL`, Stock Transfer → `StockTra
 
 ### Known v1 limitation: intent-in-context follow-ups
 
-- **4th data point for Phase-6 intent-in-context:** replayed from the Account-less utility bar
-  on 2026-06-01. Prompt: `how many orders are on Test Olam account` classifies as
-  `ACCOUNT_INSIGHT`, but `extractInsightAccount()` only recognizes `for <name>` /
-  `related to <name>` phrasing, so it misses `on Test Olam account` and asks the read-only
-  `Which account?`. Because that read-only ask leaves state at `COLLECTING` (no persisted
-  "waiting for an insight account" context), the follow-up `Test Olam` is classified/handled
-  as default `CREATE` and falls into `AWAITING_ACCOUNT`, replying `Which account is this
-Loading Advice for?`. Root pattern matches the earlier `AWAITING_ACCOUNT` loop, intent
-  hijack, and disambiguation switch cases: the reply's meaning depends on what the agent just
-  asked, but v1 does not persist that pending intent. Proposed fix: add an insight-specific
-  awaiting phase/state (for example `AWAITING_INSIGHT_ACCOUNT`, with optional original insight
-  query/metric context), route the next bare account answer back through `Agent_GetAccountInsight`,
-  and widen the account-term extractor to cover `on <name> account` / similar read-only
-  phrasings. Do this in Phase 6, not as a v1 reflex fix.
+- **4th data point — RESOLVED (implemented, not deferred to Phase 6):** the utility-bar
+  insight-account follow-up. Originally: `how many orders on Test Olam account` classified as
+  `ACCOUNT_INSIGHT` but `extractInsightAccount()` only matched `for`/`related to`, so `on …
+account` was missed and the read-only `Which account?` left state at `COLLECTING` → the bare
+  `Test Olam` follow-up fell into the create `AWAITING_ACCOUNT`. **Fix shipped:** new phase
+  `PHASE_AWAITING_INSIGHT_ACCOUNT` (routed before the intent gate) so the bare-name reply is
+  resolved as the insight account and run through `Agent_GetAccountInsight` (read-only, never
+  persisted into create state, returns to `COLLECTING`); `extractInsightAccount()` widened to
+  `on <name>` too. Not-found/ambiguous re-asks and stays in the insight wait. Regression tests
+  added; 95 Agent tests green. (Same root pattern as `AWAITING_ACCOUNT` / disambiguation — the
+  reply's meaning depends on what the agent just asked, now persisted for the insight path.)
 - **5th-7th data points: capture-echo replay surfaced the same root pattern on create turns**
   (rule parser misses natural phrasing / controller does not treat corrections as contextual
   edits). Replayed 2026-06-01, no build/deploy:

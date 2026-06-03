@@ -14,6 +14,7 @@ public with sharing class AgentConversationController {
   private static final String PHASE_COLLECTING = 'COLLECTING';
   private static final String PHASE_AWAITING_ACCOUNT = 'AWAITING_ACCOUNT';
   private static final String PHASE_AWAITING_ACCOUNT_SWITCH = 'AWAITING_ACCOUNT_SWITCH';
+  private static final String PHASE_AWAITING_INSIGHT_ACCOUNT = 'AWAITING_INSIGHT_ACCOUNT';
   private static final String PHASE_AWAITING_CONFIRM = 'AWAITING_CONFIRM';
   private static final String PHASE_PENDING_SUBMIT = 'PENDING_SUBMIT';
 
@@ -96,6 +97,10 @@ public with sharing class AgentConversationController {
     if (st.phase == PHASE_AWAITING_ACCOUNT) {
       return handleAwaitingAccount(userText, st);
     }
+    if (st.phase == PHASE_AWAITING_INSIGHT_ACCOUNT) {
+      // a read-only insight is waiting for the account name; treat this reply as that answer
+      return resolveInsightAccount(st, stripAccountLabel(userText));
+    }
     // IDLE only: classify intent BEFORE the create parser touches the text, so a read-only
     // question ("list orders for X") is never hijacked by the create parser's "for <name>"
     // extractor. Mid-chain phases above are skipped, so an in-flight create is never broken.
@@ -113,30 +118,60 @@ public with sharing class AgentConversationController {
   // These never enter or mutate the create state machine — they return the state unchanged
   // (a half-built create in COLLECTING is preserved) and create nothing.
   private static TurnResult handleAccountInsight(String userText, State st) {
-    Id acctId = st.accountId; // Account-page context, if any
-    if (acctId == null) {
-      String name = extractInsightAccount(userText);
-      if (String.isBlank(name)) {
-        return readOnly(
-          st,
-          'Which account? Try "orders for <account name>", or open the panel from an Account record.'
-        );
-      }
-      AgentActionResult ar = resolveAccount(name);
-      if (!ar.success || ar.recordId == null) {
-        return readOnly(st, accountAskMessage(ar, name));
-      }
-      acctId = ar.recordId;
+    if (st.accountId != null) {
+      return runAccountInsight(st, st.accountId); // Account-page context
     }
+    String name = extractInsightAccount(userText);
+    if (String.isBlank(name)) {
+      // No account named — ask, and REMEMBER we're waiting for an insight account so the
+      // bare-name follow-up resolves here (not the create flow's account question).
+      return askForInsightAccount(
+        st,
+        'Which account? Tell me the account name (e.g. "orders for Acme"), or open this from an Account record.'
+      );
+    }
+    return resolveInsightAccount(st, name);
+  }
+
+  // Resolve an account for a read-only insight; stay in AWAITING_INSIGHT_ACCOUNT until resolved.
+  private static TurnResult resolveInsightAccount(State st, String name) {
+    if (String.isBlank(name)) {
+      return askForInsightAccount(
+        st,
+        'Which account? Tell me the account name.'
+      );
+    }
+    AgentActionResult ar = resolveAccount(name);
+    if (ar.success && ar.recordId != null) {
+      return runAccountInsight(st, ar.recordId); // does NOT persist to create state
+    }
+    // not found / ambiguous -> stay waiting so the next reply is tried as the account
+    return askForInsightAccount(st, accountAskMessage(ar, name));
+  }
+
+  // Runs the read-only account insight and returns conversation to idle (COLLECTING).
+  // Never persists the account into create-chain state.
+  private static TurnResult runAccountInsight(State st, Id acctId) {
     Agent_GetAccountInsight.Request rq = new Agent_GetAccountInsight.Request();
     rq.accountId = acctId;
     AgentActionResult insight = Agent_GetAccountInsight.getInsight(
       new List<Agent_GetAccountInsight.Request>{ rq }
     )[0];
+    st.phase = PHASE_COLLECTING;
     return readOnly(
       st,
       insight.success ? formatInsight(insight.summaryJson) : insight.message
     );
+  }
+
+  private static TurnResult askForInsightAccount(State st, String message) {
+    st.phase = PHASE_AWAITING_INSIGHT_ACCOUNT;
+    TurnResult out = base(st);
+    out.status = AgentActionResult.STATUS_NEEDS_INPUT;
+    out.success = false;
+    out.message = message;
+    out.missingFields = new List<String>{ 'Account' };
+    return out;
   }
 
   private static TurnResult handleObjectInfo(String userText, State st) {
@@ -200,7 +235,7 @@ public with sharing class AgentConversationController {
 
   private static String extractInsightAccount(String text) {
     Matcher m = Pattern.compile(
-        '(?i)(?:related to|for)\\s+(.+?)(?:\\s+account\\b|[.,]|$)'
+        '(?i)(?:related to|for|on)\\s+(.+?)(?:\\s+account\\b|[.,]|$)'
       )
       .matcher(text);
     if (m.find()) {
